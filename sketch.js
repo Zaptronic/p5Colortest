@@ -1,48 +1,64 @@
-var colorSetter = {
-    hueSetter: 0,
-    satSetter: 0,
-    brightSetter: 0
-}
-var colorMono = 180;
-var monosetter = {};
-
-var colorpanels = 2;
-var incrementer = 0;
+var Y_AXIS = 1;
+var X_AXIS = 2;
+var colorSetterA, colorSetterB;
 
 function setup() {
     createCanvas(windowWidth, windowHeight);
-    noStroke();
-    colorMode(HSB);
-    colorControl = new colorController();
+    noFill();
+    colorMode(RGB);
+    colorSetterA = color(0, 0, 0);
+    colorSetterB = color(0, 0, 0);
+
+    gradientControl = new gradientController();
     gui = new dat.GUI();
 
-    monosetter = gui.add(colorControl, 'mono');
-    var fsat = gui.addFolder('saturation');
-    fsat.add(colorControl, 'satMin', 0, 100);
-    fsat.add(colorControl, 'satMax', 0, 100);
+    var fsat = gui.addFolder('color A');
+    fsat.add(gradientControl, 'redA', 0, 254);
+    fsat.add(gradientControl, 'greenA', 0, 254);
+    fsat.add(gradientControl, 'blueA', 0, 254);
 
-    var fbright = gui.addFolder('brightness');
-    fbright.add(colorControl, 'brightMin', 0, 100);
-    fbright.add(colorControl, 'brightMax', 0, 100);
+    var fsat = gui.addFolder('color B');
+    fsat.add(gradientControl, 'redB', 0, 254);
+    fsat.add(gradientControl, 'greenB', 0, 254);
+    fsat.add(gradientControl, 'blueB', 0, 254);
 
-    monosetter.onChange(function(value) {
-        if(colorControl.mono) { colorMono = 30; colorpanels = 3;}
-        else { colorMono = 180; colorpanels = 2;}
-    });
 }
 
 function draw() {
-    for(var i = 0; i < colorpanels; i++) {
-        var panelwidth = windowWidth/colorpanels;
-        fill(colorSetter.hueSetter - colorMono*i, colorSetter.satSetter, colorSetter.brightSetter);
-        rect(panelwidth * i, 0, panelwidth, windowHeight);
-        console.log(colorMono * i);
+    setGradient(0, 0, windowWidth, windowHeight, colorSetterA, colorSetterB, X_AXIS);
+    if (frameCount%100 === 0) {
+        console.log(colorSetterA);
     }
 
-    colorSetter.hueSetter = map(sin(incrementer), -1, 1, 0, 360);
-    colorSetter.satSetter = map(sin(incrementer), -1, 1, colorControl.satMin, colorControl.satMax);
-    colorSetter.brightSetter = map(sin(incrementer), -1, 1, colorControl.brightMin, colorControl.brightMax);
-    incrementer += 0.002;
+    var redA = gradientControl.redA;
+    var greenA = gradientControl.greenA;
+    var blueA = gradientControl.blueA;
+
+    var redB = gradientControl.redB;
+    var greenB = gradientControl.greenB;
+    var blueB = gradientControl.blueB;
+
+    colorSetterA = color(redA, greenA, blueA);
+    colorSetterB = color(redB, greenB, blueB);
+}
+
+function setGradient(x, y, w, h, c1, c2, axis) {
+  if (axis == Y_AXIS) {
+    for (var i = y; i <= y+h; i++) {
+      var inter = map(i, y, y+h, 0, 1);
+      var c = lerpColor(c1, c2, inter);
+      stroke(c);
+      line(x, i, x+w, i);
+    }
+  }
+  else if (axis == X_AXIS) {
+    for (var i = x; i <= x+w; i++) {
+      var inter = map(i, x, x+w, 0, 1);
+      var c = lerpColor(c1, c2, inter);
+      stroke(c);
+      line(i, y, i, y+h);
+    }
+  }
 }
 
 function windowResized() {
